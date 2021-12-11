@@ -1,0 +1,5 @@
+/zig-out
+/zig-cache
+/deps.zig
+/gyro.lock
+/.gyro
