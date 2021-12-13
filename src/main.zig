@@ -1,4 +1,5 @@
 pub const Option = @import("option.zig").Option;
+pub const Comparable = @import("comparable.zig");
 // only some function is available
 // None need to be known the reciever's type
 // which is not clear at comptime
