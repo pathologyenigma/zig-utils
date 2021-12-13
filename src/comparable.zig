@@ -6,4 +6,4 @@ pub const ComparedResult = enum {
     Less
 };
 
-cmp: fn(a:Comparable, b:Comparable) Comparable.ComparedResult,
+cmp: fn(self: *Comparable, b: Comparable) Comparable.ComparedResult,
