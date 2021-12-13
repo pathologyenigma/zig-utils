@@ -14,12 +14,18 @@ const option = @This();
 /// you can skip this type and use the zig original optional type
 /// this type is experimental and may contains some bugs
 /// help me to make it better!
+/// not having unwrap_unchecked
+/// just because every unwrap operations here are unchecked
+/// no as_pin_ref or as_pin_mut
+/// cause zig's async runtime is not the same
+/// no ok_or or ok_or_else or some other thing to converts to Result type
 pub fn Option(comptime T: type) type {
     return struct {
         /// for hidding memory operations
         /// I specified the allocator for this type
         /// in future versions I will implement a general one for this type
         const allocator: *Allocator = std.heap.page_allocator;
+
         const Self = @This();
         /// it just wrapping around a optional type
         /// but this memory's ownership is holded by the type
@@ -68,8 +74,6 @@ pub fn Option(comptime T: type) type {
             if (self.is_none()) return Option(*T).None;
             return try Option(*T).Some(self.value.?);
         }
-        /// no as_pin_ref or as_pin_mut
-        /// cause zig's async runtime is not the same
 
         /// Returns the contained Some value, consuming the self value.
         /// PS: this will drop the inner value's memory address
@@ -112,8 +116,6 @@ pub fn Option(comptime T: type) type {
             self.deinit();
             return res;
         }
-        /// not having unwrap_unchecked
-        // just because every unwrap operations here are unchecked
 
         /// Maps an Option<T> to Option<U> by applying a function to a contained value.
         /// this really takes a litte bit time to found implementation for this
@@ -141,16 +143,16 @@ pub fn Option(comptime T: type) type {
         /// if you are passing the result of a function call,
         /// it is recommended to use map_or_else, which is lazily evaluated.
         /// same rule as the map one
-        pub fn map_or(self: *Self, f: anytype, default: @typeInfo(@TypeOf(f)).Fn.return_type.?) !Option(@typeInfo(@TypeOf(f)).Fn.return_type.?) {
-            if (self.is_none()) return Option(@typeInfo(@TypeOf(f)).Fn.return_type.?).Some(default);
-            return self.map(f);
+        pub fn map_or(self: *Self, f: anytype, default: @typeInfo(@TypeOf(f)).Fn.return_type.?) !@typeInfo(@TypeOf(f)).Fn.return_type.? {
+            if (self.is_none()) return default;
+            return (try self.map(f)).unwrap();
         }
         /// Computes a default function result (if none),
         /// or applies a different function to the contained value (if any).
         /// also the same rule as the map one
-        pub fn map_or_else(self: *Self, f: anytype, default: fn () T) !Option(@typeInfo(@TypeOf(f)).Fn.return_type.?) {
+        pub fn map_or_else(self: *Self, f: anytype, default: fn () @typeInfo(@TypeOf(f)).Fn.return_type.?) !@typeInfo(@TypeOf(f)).Fn.return_type.? {
             if (self.is_none()) return default();
-            return self.map(f);
+            return (try self.map(f)).unwrap();
         }
         /// zig not having auto drop
         /// so we need to drop it ourselves
@@ -216,6 +218,10 @@ test "unwraps" {
     var c = (try a.as_ref()).unwrap_or_else(ff);
     try testing.expect(c.* == 2);
 }
+fn defaultF() i32 {
+    var res: i32 = 2;
+    return res;
+}
 fn mapping(input: i32) i32 {
     return input + 1;
 }
@@ -227,5 +233,9 @@ test "maps" {
     a.deinit();
     a = OptionI32.None;
     var c = try a.map_or(mapping, i);
-    try testing.expect(c.contains(&i));
+    try testing.expect(c == i);
+    var d = OptionI32.None;
+    var e = try d.map_or_else(mapping, defaultF);
+    try testing.expect(e == i);
 }
+

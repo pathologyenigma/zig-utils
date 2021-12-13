@@ -1,5 +1,4 @@
-pub const Option = @import("option.zig").Option;
-
+const Option = @import("option.zig").Option;
 // only some function is available
 // None need to be known the reciever's type
 // which is not clear at comptime
