@@ -7,3 +7,4 @@ const Option = @import("option.zig").Option;
 pub fn Some(value: anytype) !Option(@TypeOf(value)) {
     return Option(@TypeOf(value)).Some(value);
 }
+const utils = @This();
