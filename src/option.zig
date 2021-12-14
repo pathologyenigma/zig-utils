@@ -3,6 +3,7 @@ const Allocator = std.mem.Allocator;
 const testing = std.testing;
 const meta = std.meta;
 const builtin = std.builtin;
+const Comparable = @import("comparable.zig");
 const option = @This();
 /// some type that is a liite bit like rust's optional type
 /// I do this just to get rid of if(something != null)
@@ -25,8 +26,8 @@ pub fn Option(comptime T: type) type {
         /// I specified the allocator for this type
         /// in future versions I will implement a general one for this type
         const allocator: *Allocator = std.heap.page_allocator;
-
         const Self = @This();
+        const ComparedResult = Comparable.ComparedResult;
         /// it just wrapping around a optional type
         /// but this memory's ownership is holded by the type
         value: ?*T,
@@ -159,10 +160,41 @@ pub fn Option(comptime T: type) type {
         pub fn deinit(self: *Self) void {
             if (self.is_some()) Self.allocator.destroy(self.value.?);
         }
+        // try to implement a comparable for Option type
+        // inner type is must be comparable or implement Comparable
+        pub fn cmp(self: *Self, other: Self) Self.ComparedResult {
+            if (self.is_none())
+                return Self.ComparedResult.Less;
+
+            var value = self.value.?.*;
+            var othervalue = other.value.?.*;
+            switch (@typeInfo(@TypeOf(value))) {
+                .Float, .Int => {
+                    if (value == othervalue) return Self.ComparedResult.Equal;
+                    if (value < othervalue) return Self.ComparedResult.Less;
+                    if (value > othervalue) return Self.ComparedResult.Greater;
+                },
+                .Struct => {
+                    if (@TypeOf(value) == Comparable) {
+                        return value.cmp(othervalue);
+                    } else {
+                        std.log.warn("struct type {s} is not implemented comparable", .{@TypeOf(value)});
+                    }
+                },
+                .Pointer => {
+                    var res = std.cstr.cmp(value, othervalue);
+                    if(res == 0) return Self.ComparedResult.Equal;
+                    if(res == 1) return Self.ComparedResult.Greater;
+                    if(res == -1) return Self.ComparedResult.Less;
+                },
+                else => {
+                    std.log.warn("type {s} are not comparable", .{@typeInfo(@TypeOf(value))});
+                },
+            }
+            return Self.ComparedResult.NotComparable;
+        }
     };
 }
-
-
 const OptionI32 = Option(i32);
 
 test "Some and None" {
@@ -238,4 +270,3 @@ test "maps" {
     var e = try d.map_or_else(mapping, defaultF);
     try testing.expect(e == i);
 }
-

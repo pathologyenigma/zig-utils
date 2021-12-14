@@ -9,3 +9,11 @@ pub fn Some(value: anytype) !Option(@TypeOf(value)) {
     return Option(@TypeOf(value)).Some(value);
 }
 pub const utils = @This();
+
+test "a" {
+    const testing = @import("std").testing;
+    var a = "aaaa";
+    var b = "bbbb";
+    var v = try Some(a);
+    try testing.expect(v.cmp(try Some(b)) == Comparable.ComparedResult.Less);
+}
