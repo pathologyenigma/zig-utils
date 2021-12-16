@@ -50,11 +50,11 @@ pub fn Option(comptime T: type) type {
         /// just a ownership upon null value
         pub const None = Self{ .value = null };
         /// Returns true if the option is a Some value.
-        pub fn is_some(self: *Self) bool {
+        pub fn is_some(self: *const Self) bool {
             return !self.is_none();
         }
         /// Returns true if the option is a None value.
-        pub fn is_none(self: *Self) bool {
+        pub fn is_none(self: *const Self) bool {
             return self.value == null;
         }
         /// Returns true if the option is a Some value containing the given value.
