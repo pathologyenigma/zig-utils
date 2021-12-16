@@ -64,7 +64,7 @@ pub fn Option(comptime T: type) type {
         }
         /// this gives only const pointer
         /// exactly like the borrow in rust
-        pub fn as_ref(self: *Self) !Option(*const T) {
+        pub fn as_ref(self: *const Self) !Option(*const T) {
             if (self.is_none()) return Option(*const T).None;
             return try Option(*const T).Some(&self.value.?.*);
         }
