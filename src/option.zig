@@ -25,7 +25,7 @@ pub fn Option(comptime T: type) type {
         /// for hidding memory operations
         /// I specified the allocator for this type
         /// in future versions I will implement a general one for this type
-        const allocator: *Allocator = std.heap.page_allocator;
+        const allocator: Allocator = std.heap.page_allocator;
         const Self = @This();
         const ComparedResult = Comparable.ComparedResult;
         /// it just wrapping around a optional type
@@ -192,6 +192,11 @@ pub fn Option(comptime T: type) type {
                 },
             }
             return Self.ComparedResult.NotComparable;
+        }
+        pub fn from(optional: ?*T) Self {
+            return Self{
+                .value = optional
+            };
         }
     };
 }

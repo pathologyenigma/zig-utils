@@ -1,9 +1,8 @@
 pkgs:
   utils:
     version: 0.0.2
-    description: "some utils I use for zig dev"
+    description: some utils I use for zig dev
     source_url: "https://github.com/pathologyenigma/zig-utils"
-
     root: src/main.zig
     files:
       README.md
