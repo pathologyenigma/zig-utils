@@ -1,6 +1,5 @@
 pub const Option = @import("option.zig").Option;
 pub const Comparable = @import("comparable.zig");
-pub const ecs = @import("ecs.zig");
 const std = @import("std");
 /// only some function is available
 /// None need to be known the reciever's type

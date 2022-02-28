@@ -159,6 +159,7 @@ pub fn Option(comptime T: type) type {
         /// so we need to drop it ourselves
         pub fn deinit(self: *Self) void {
             if (self.is_some()) Self.allocator.destroy(self.value.?);
+            self.value = null;
         }
         // try to implement a comparable for Option type
         // inner type is must be comparable or implement Comparable
@@ -205,13 +206,14 @@ const OptionI32 = Option(i32);
 test "Some and None" {
     var i: i32 = 2;
     var a = try OptionI32.Some(i);
+    a.deinit();
     a = OptionI32.None;
 }
 test "is_some and is_none" {
     var i: i32 = 2;
     var a = try OptionI32.Some(i);
     try testing.expect(a.is_some());
-    defer a.deinit();
+    a.deinit();
     a = OptionI32.None;
     try testing.expect(a.is_none());
 }
@@ -219,8 +221,8 @@ test "contains" {
     var i: i32 = 2;
     var j: i32 = 2;
     var a = try OptionI32.Some(i);
-    defer a.deinit();
     try testing.expect(a.contains(&j));
+    a.deinit();
     a = OptionI32.None;
     try testing.expect(!a.contains(&j));
 }
