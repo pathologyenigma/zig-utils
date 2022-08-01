@@ -8,7 +8,7 @@ const option = @This();
 /// some type that is a liite bit like rust's optional type
 /// I do this just to get rid of if(something != null)
 /// and don't want to see some error messages like
-/// xxx type not supported member access because is a optional
+/// xxx type not supported member access because it is a optional
 /// sometime I just want to .expect("get a null xxx");
 /// if you like to handle null by you self
 /// and you know every optional value's ownership
@@ -20,6 +20,8 @@ const option = @This();
 /// no as_pin_ref or as_pin_mut
 /// cause zig's async runtime is not the same
 /// no ok_or or ok_or_else or some other thing to converts to Result type
+/// not checked with union types, hope it will works
+/// this type is implemented the Comparable trait in the same folder
 pub fn Option(comptime T: type) type {
     return struct {
         /// for hidding memory operations
@@ -34,7 +36,7 @@ pub fn Option(comptime T: type) type {
         /// zig's error handling is different
         /// so I put the errors here
         /// also as you can see
-        /// this kind of error handling
+        /// because of this kind of error handling
         /// Result type could not be implemented here
         pub const Error = error{
             UnhandledNullValue,
@@ -48,6 +50,7 @@ pub fn Option(comptime T: type) type {
         }
         /// the none value
         /// just a ownership upon null value
+        /// may be in future we will have zero bit None
         pub const None = Self{ .value = null };
         /// Returns true if the option is a Some value.
         pub fn is_some(self: *const Self) bool {
@@ -179,25 +182,23 @@ pub fn Option(comptime T: type) type {
                     if (@TypeOf(value) == Comparable) {
                         return value.cmp(othervalue);
                     } else {
-                        std.log.warn("struct type {s} is not implemented comparable", .{@TypeOf(value)});
+                        @panic("struct type {s} is not implemented comparable", .{@TypeOf(value)});
                     }
                 },
                 .Pointer => {
                     var res = std.cstr.cmp(value, othervalue);
-                    if(res == 0) return Self.ComparedResult.Equal;
-                    if(res == 1) return Self.ComparedResult.Greater;
-                    if(res == -1) return Self.ComparedResult.Less;
+                    if (res == 0) return Self.ComparedResult.Equal;
+                    if (res == 1) return Self.ComparedResult.Greater;
+                    if (res == -1) return Self.ComparedResult.Less;
                 },
                 else => {
-                    std.log.warn("type {s} are not comparable", .{@typeInfo(@TypeOf(value))});
+                    @panic("type {s} are not comparable", .{@typeInfo(@TypeOf(value))});
                 },
             }
             return Self.ComparedResult.NotComparable;
         }
         pub fn from(optional: ?*T) Self {
-            return Self{
-                .value = optional
-            };
+            return Self{ .value = optional };
         }
     };
 }
